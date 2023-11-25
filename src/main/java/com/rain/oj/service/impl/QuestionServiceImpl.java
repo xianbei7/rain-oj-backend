@@ -1,6 +1,9 @@
 package com.rain.oj.service.impl;
 
+import cn.hutool.core.collection.CollectionUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.google.gson.Gson;
@@ -11,19 +14,24 @@ import com.rain.oj.exception.ThrowUtils;
 import com.rain.oj.mapper.QuestionFavourMapper;
 import com.rain.oj.mapper.QuestionMapper;
 import com.rain.oj.mapper.QuestionThumbMapper;
+import com.rain.oj.model.dto.question.JudgeCase;
+import com.rain.oj.model.dto.question.JudgeConfig;
 import com.rain.oj.model.dto.question.QuestionQueryRequest;
+import com.rain.oj.model.dto.question.QuestionSaveRequest;
 import com.rain.oj.model.entity.Question;
 import com.rain.oj.model.entity.QuestionFavour;
 import com.rain.oj.model.entity.QuestionThumb;
 import com.rain.oj.model.entity.User;
+import com.rain.oj.model.enums.QuestionDifficultyEnum;
+import com.rain.oj.model.vo.DoQuestionVO;
 import com.rain.oj.model.vo.QuestionVO;
 import com.rain.oj.model.vo.UserVO;
 import com.rain.oj.service.QuestionService;
 import com.rain.oj.service.UserService;
 import com.rain.oj.utils.SqlUtils;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -43,6 +51,8 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question>
     @Resource
     private UserService userService;
     @Resource
+    private QuestionMapper questionMapper;
+    @Resource
     private QuestionThumbMapper questionThumbMapper;
     @Resource
     private QuestionFavourMapper questionFavourMapper;
@@ -58,6 +68,7 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question>
         if (question == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
+        Integer number = question.getNumber();
         String title = question.getTitle();
         String content = question.getContent();
         String tags = question.getTags();
@@ -67,7 +78,10 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question>
 
         // 创建时，参数不能为空
         if (add) {
-            ThrowUtils.throwIf(StringUtils.isAnyBlank(title, content, tags), ErrorCode.PARAMS_ERROR);
+            ThrowUtils.throwIf(number == null && StringUtils.isAnyBlank(title, content, tags), ErrorCode.PARAMS_ERROR);
+        }
+        if (number != null && number > 10000) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "编号太大");
         }
         // 有参数则校验
         if (StringUtils.isNotBlank(title) && title.length() > 80) {
@@ -76,13 +90,13 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question>
         if (StringUtils.isNotBlank(content) && content.length() > 8192) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "内容过长");
         }
-        if (StringUtils.isNotBlank(answer) && content.length() > 8192) {
+        if (StringUtils.isNotBlank(answer) && answer.length() > 8192) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "答案过长");
         }
-        if (StringUtils.isNotBlank(judgeCase) && content.length() > 8192) {
+        if (StringUtils.isNotBlank(judgeCase) && judgeCase.length() > 8192) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "判题用例过长");
         }
-        if (StringUtils.isNotBlank(judgeConfig) && content.length() > 8192) {
+        if (StringUtils.isNotBlank(judgeConfig) && judgeConfig.length() > 8192) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "判题配置过长");
         }
     }
@@ -99,41 +113,62 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question>
         if (questionQueryRequest == null) {
             return queryWrapper;
         }
-        Long id = questionQueryRequest.getId();
+        String searchText = questionQueryRequest.getSearchText();
+        Integer number = questionQueryRequest.getNumber();
         String title = questionQueryRequest.getTitle();
         String content = questionQueryRequest.getContent();
         List<String> tags = questionQueryRequest.getTags();
+        String difficulty = questionQueryRequest.getDifficulty();
         String answer = questionQueryRequest.getAnswer();
         Long userId = questionQueryRequest.getUserId();
         String sortOrder = questionQueryRequest.getSortOrder();
-
-        queryWrapper.like(StringUtils.isNotBlank(title), Question::getTitle, title);
-        queryWrapper.like(StringUtils.isNotBlank(content), Question::getContent, content);
-        queryWrapper.like(StringUtils.isNotBlank(answer), Question::getAnswer, answer);
+        String sortField = questionQueryRequest.getSortField();
+        if (StringUtils.isNotBlank(searchText) && number == null && title == null && content == null && answer == null) {
+            queryWrapper.like(Question::getNumber, searchText)
+                    .or()
+                    .like(Question::getTitle, searchText)
+                    .or()
+                    .like(Question::getContent, searchText)
+                    .or()
+                    .like(Question::getAnswer, searchText);
+        } else {
+            queryWrapper.like(number != null, Question::getNumber, number);
+            queryWrapper.like(StringUtils.isNotBlank(title), Question::getTitle, title);
+            queryWrapper.like(StringUtils.isNotBlank(content), Question::getContent, content);
+            queryWrapper.like(StringUtils.isNotBlank(answer), Question::getAnswer, answer);
+        }
         if (CollectionUtils.isNotEmpty(tags)) {
             for (String tag : tags) {
                 queryWrapper.like(Question::getTags, "\"" + tag + "\"");
             }
         }
-        queryWrapper.eq(ObjectUtils.isNotEmpty(id), Question::getId, id);
+        if (StringUtils.isNotBlank(difficulty)) {
+            QuestionDifficultyEnum difficultyEnum = QuestionDifficultyEnum.getEnumByText(difficulty);
+            queryWrapper.eq(difficultyEnum != null, Question::getDifficulty, difficultyEnum.getValue());
+        }
         queryWrapper.eq(ObjectUtils.isNotEmpty(userId), Question::getUserId, userId);
         queryWrapper.eq(Question::getIsDelete, false);
-        queryWrapper.orderBy(SqlUtils.validSortField(questionQueryRequest.getSortField()), sortOrder.equals(CommonConstant.SORT_ORDER_ASC), question -> questionQueryRequest.getSortField());
+        queryWrapper.orderBy(SqlUtils.validSortField(sortField), sortOrder.equals(CommonConstant.SORT_ORDER_ASC), getSortFieldColumn(sortField));
         return queryWrapper;
     }
-
-    @Override
-    public QuestionVO getQuestionVO(Question question, HttpServletRequest request) {
-        QuestionVO questionVO = QuestionVO.objToVo(question);
-        long questionId = question.getId();
-        // 1. 关联查询用户信息
-        Long userId = question.getUserId();
-        User user = null;
-        if (userId != null && userId > 0) {
-            user = userService.getById(userId);
+    private SFunction<Question, ?> getSortFieldColumn(String sortField){
+        Map<String, SFunction<Question,?>> map = new HashMap<>();
+        {
+            map.put("number",Question::getNumber);
+            map.put("title",Question::getTitle);
+            map.put("difficulty",Question::getDifficulty);
+            map.put("submitNum",Question::getSubmitNum);
+            map.put("acceptedNum",Question::getAcceptedNum);
+            map.put("thumbNum",Question::getThumbNum);
+            map.put("createTime",Question::getCreateTime);
+            map.put("updateTime",Question::getUpdateTime);
         }
-        UserVO userVO = userService.getUserVO(user);
-        questionVO.setUserVO(userVO);
+        return map.get(sortField);
+    }
+    @Override
+    public DoQuestionVO getQuestionVO(Question question, HttpServletRequest request) {
+        DoQuestionVO doQuestionVO = DoQuestionVO.objToVo(question);
+        long questionId = question.getId();
         // 2. 已登录，获取用户点赞、收藏状态
         User loginUser = userService.getLoginUserPermitNull(request);
         if (loginUser != null) {
@@ -142,15 +177,15 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question>
             questionThumbQueryWrapper.in(QuestionThumb::getQuestionId, questionId);
             questionThumbQueryWrapper.eq(QuestionThumb::getUserId, loginUser.getId());
             QuestionThumb questionThumb = questionThumbMapper.selectOne(questionThumbQueryWrapper);
-            questionVO.setHasThumb(questionThumb != null);
+            doQuestionVO.setHasThumb(questionThumb != null);
             // 获取收藏
             LambdaQueryWrapper<QuestionFavour> questionFavourQueryWrapper = new LambdaQueryWrapper<>();
             questionFavourQueryWrapper.in(QuestionFavour::getQuestionId, questionId);
             questionFavourQueryWrapper.eq(QuestionFavour::getUserId, loginUser.getId());
             QuestionFavour questionFavour = questionFavourMapper.selectOne(questionFavourQueryWrapper);
-            questionVO.setHasFavour(questionFavour != null);
+            doQuestionVO.setHasFavour(questionFavour != null);
         }
-        return questionVO;
+        return doQuestionVO;
     }
 
     @Override
@@ -201,4 +236,56 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question>
         return questionVOPage;
     }
 
+    @Override
+    public Boolean saveQuestion(QuestionSaveRequest questionSaveRequest, User loginUser, boolean add) {
+        Integer number = questionMapper.getByNumber(questionSaveRequest.getNumber());
+        if (add){
+            ThrowUtils.throwIf(number!=null,ErrorCode.PARAMS_ERROR,"编号已存在");
+        }else {
+            // 修改，要求如果编号相同可以，不同且重复，报错
+            long id = questionSaveRequest.getId();
+            // 判断是否存在
+            Question oldQuestion = getById(id);
+            ThrowUtils.throwIf(oldQuestion == null, ErrorCode.NOT_FOUND_ERROR);
+            // 判断是否本人或管理员操作
+            Long userId = oldQuestion.getUserId();
+            if (!userId.equals(loginUser.getId())&&userService.isAdmin(loginUser)){
+                throw new BusinessException(ErrorCode.NO_AUTH_ERROR,"没有修改权限！");
+            }
+            // 如果编号不同且新编号重复，报错
+            ThrowUtils.throwIf(oldQuestion.getNumber().equals(questionSaveRequest.getNumber())&&number!=null, ErrorCode.NOT_FOUND_ERROR);
+        }
+        Question question = new Question();
+        BeanUtils.copyProperties(questionSaveRequest, question);
+        String difficulty = questionSaveRequest.getDifficulty();
+        QuestionDifficultyEnum difficultyEnum = QuestionDifficultyEnum.getEnumByText(difficulty);
+        if (difficultyEnum == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"难度设置错误");
+        }
+        question.setDifficulty(difficultyEnum.getValue());
+        List<String> tags = questionSaveRequest.getTags();
+        JudgeConfig judgeConfig = questionSaveRequest.getJudgeConfig();
+        List<JudgeCase> judgeCase = questionSaveRequest.getJudgeCase();
+        if (tags != null) {
+            question.setTags(GSON.toJson(tags));
+        }
+        if (judgeConfig != null) {
+            question.setJudgeConfig(GSON.toJson(judgeConfig));
+        }else {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"判题配置不能为空");
+        }
+        if (CollectionUtil.isNotEmpty(judgeCase)) {
+            question.setJudgeCase(GSON.toJson(judgeCase));
+        }else {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"判题用例不能为空");
+        }
+        validQuestion(question, add);
+
+        if (add){
+            question.setUserId(loginUser.getId());
+            return save(question);
+        }else {
+            return updateById(question);
+        }
+    }
 }

@@ -3,8 +3,11 @@ package com.rain.oj.service;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.rain.oj.model.dto.question.QuestionQueryRequest;
+import com.rain.oj.model.dto.question.QuestionSaveRequest;
 import com.rain.oj.model.entity.Question;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.rain.oj.model.entity.User;
+import com.rain.oj.model.vo.DoQuestionVO;
 import com.rain.oj.model.vo.QuestionVO;
 
 import javax.servlet.http.HttpServletRequest;
@@ -36,7 +39,7 @@ public interface QuestionService extends IService<Question> {
      * @param request
      * @return
      */
-    QuestionVO getQuestionVO(Question question, HttpServletRequest request);
+    DoQuestionVO getQuestionVO(Question question, HttpServletRequest request);
 
     /**
      * 分页获取题目封装
@@ -46,4 +49,6 @@ public interface QuestionService extends IService<Question> {
      * @return
      */
     Page<QuestionVO> getQuestionVOPage(Page<Question> questionPage, HttpServletRequest request);
+
+    Boolean saveQuestion(QuestionSaveRequest questionSaveRequest, User loginUser,boolean add);
 }

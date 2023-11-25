@@ -28,9 +28,11 @@ create table if not exists user
 create table if not exists question
 (
     id           bigint auto_increment comment 'id' primary key,
+    number       int                                not null comment '编号',
     title        varchar(512)                       null comment '标题',
     content      text                               null comment '内容',
     tags         varchar(1024)                      null comment '标签列表（json 数组）',
+    difficulty   tinyint                            not null comment '难度',
     answer       text                               null comment '题目答案',
     submit_num   int      default 0                 not null comment '题目提交数',
     accepted_num int      default 0                 not null comment '题目通过数',
@@ -51,7 +53,7 @@ create table if not exists question_submit
     id          bigint auto_increment comment 'id' primary key,
     question_id bigint                             not null comment '题目 id',
     user_id     bigint                             not null comment '提交用户 id',
-    language    int                                not null comment '编程语言',
+    language    varchar(10)                        not null comment '编程语言',
     code        text                               not null comment '用户代码',
     judge_info  text                               null comment '判题信息（json 数组）',
     status      int      default 0                 not null comment '判题状态（0 - 待判题、1 - 判题中、2  成功、3 - 失败）',

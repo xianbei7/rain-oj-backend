@@ -19,4 +19,9 @@ class QuestionMapperTest {
     @Resource
     private QuestionMapper questionMapper;
 
+    @Test
+    void getByNumberTest() {
+        Integer number = questionMapper.getByNumber(0);
+        Assertions.assertNull(number);
+    }
 }

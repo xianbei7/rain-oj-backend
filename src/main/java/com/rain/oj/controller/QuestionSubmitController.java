@@ -9,23 +9,23 @@ import com.rain.oj.model.dto.questionsubmit.QuestionSubmitAddRequest;
 import com.rain.oj.model.dto.questionsubmit.QuestionSubmitQueryRequest;
 import com.rain.oj.model.entity.QuestionSubmit;
 import com.rain.oj.model.entity.User;
+import com.rain.oj.model.enums.QuestionSubmitLanguageEnum;
+import com.rain.oj.model.enums.QuestionTagEnum;
 import com.rain.oj.model.vo.QuestionSubmitVO;
 import com.rain.oj.service.QuestionSubmitService;
 import com.rain.oj.service.UserService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
  * 题目收藏接口
  */
 @RestController
-@RequestMapping("/question_submit")
+@RequestMapping("/question/submit")
 @Slf4j
 public class QuestionSubmitController {
 
@@ -71,5 +71,15 @@ public class QuestionSubmitController {
         final User loginUser = userService.getLoginUser(request);
         // 返回脱敏信息
         return ResultUtils.success(questionSubmitService.getQuestionSubmitVOPage(questionSubmitPage, loginUser));
+    }
+
+    /**
+     * 获取题目提交语言
+     *
+     * @return
+     */
+    @GetMapping("/get/languages")
+    public BaseResponse<List<String>> getQuestionSubmitLanguages() {
+        return ResultUtils.success(QuestionSubmitLanguageEnum.getLanguages());
     }
 }

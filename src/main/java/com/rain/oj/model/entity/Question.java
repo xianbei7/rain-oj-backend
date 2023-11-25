@@ -22,6 +22,11 @@ public class Question implements Serializable {
     private Long id;
 
     /**
+     * 编号
+     */
+    private Integer number;
+
+    /**
      * 标题
      */
     private String title;
@@ -35,6 +40,11 @@ public class Question implements Serializable {
      * 标签列表（json 数组）
      */
     private String tags;
+
+    /**
+     * 难度
+     */
+    private Integer difficulty;
 
     /**
      * 题目答案

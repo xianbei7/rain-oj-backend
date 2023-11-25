@@ -1,5 +1,6 @@
 package com.rain.oj.controller;
 
+import cn.hutool.core.collection.CollectionUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.google.gson.Gson;
 import com.rain.oj.annotation.AuthCheck;
@@ -11,9 +12,11 @@ import com.rain.oj.constant.UserConstant;
 import com.rain.oj.exception.BusinessException;
 import com.rain.oj.exception.ThrowUtils;
 import com.rain.oj.model.dto.question.*;
-import com.rain.oj.model.dto.questionsubmit.QuestionSubmitQueryRequest;
 import com.rain.oj.model.entity.Question;
 import com.rain.oj.model.entity.User;
+import com.rain.oj.model.enums.QuestionDifficultyEnum;
+import com.rain.oj.model.enums.QuestionTagEnum;
+import com.rain.oj.model.vo.DoQuestionVO;
 import com.rain.oj.model.vo.QuestionVO;
 import com.rain.oj.service.QuestionService;
 import com.rain.oj.service.UserService;
@@ -51,30 +54,18 @@ public class QuestionController {
     /**
      * 创建
      *
-     * @param questionAddRequest
+     * @param questionSaveRequest
      * @param request
      * @return
      */
     @PostMapping("/add")
-    public BaseResponse<Long> addQuestion(@RequestBody QuestionAddRequest questionAddRequest, HttpServletRequest request) {
-        if (questionAddRequest == null) {
+    public BaseResponse<Boolean> addQuestion(@RequestBody QuestionSaveRequest questionSaveRequest, HttpServletRequest request) {
+        if (questionSaveRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        Question question = new Question();
-        BeanUtils.copyProperties(questionAddRequest, question);
-        List<String> tags = questionAddRequest.getTags();
-        if (tags != null) {
-            question.setTags(GSON.toJson(tags));
-        }
-        questionService.validQuestion(question, true);
         User loginUser = userService.getLoginUser(request);
-        question.setUserId(loginUser.getId());
-        question.setFavourNum(0);
-        question.setThumbNum(0);
-        boolean result = questionService.save(question);
-        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
-        long newQuestionId = question.getId();
-        return ResultUtils.success(newQuestionId);
+        Boolean result = questionService.saveQuestion(questionSaveRequest, loginUser, true);
+        return ResultUtils.success(result);
     }
 
     /**
@@ -105,36 +96,17 @@ public class QuestionController {
     /**
      * 更新（仅管理员）
      *
-     * @param questionUpdateRequest
+     * @param questionSaveRequest
      * @return
      */
     @PostMapping("/update")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
-    public BaseResponse<Boolean> updateQuestion(@RequestBody QuestionUpdateRequest questionUpdateRequest) {
-        if (questionUpdateRequest == null || questionUpdateRequest.getId() <= 0) {
+    public BaseResponse<Boolean> updateQuestion(@RequestBody QuestionSaveRequest questionSaveRequest, HttpServletRequest request) {
+        if (questionSaveRequest == null || questionSaveRequest.getId() <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        Question question = new Question();
-        BeanUtils.copyProperties(questionUpdateRequest, question);
-        List<String> tags = questionUpdateRequest.getTags();
-        if (tags != null) {
-            question.setTags(GSON.toJson(tags));
-        }
-        // 参数校验
-        questionService.validQuestion(question, false);
-        long id = questionUpdateRequest.getId();
-        // 判断是否存在
-        Question oldQuestion = questionService.getById(id);
-        ThrowUtils.throwIf(oldQuestion == null, ErrorCode.NOT_FOUND_ERROR);
-        List<JudgeCase> judgeCase = questionUpdateRequest.getJudgeCase();
-        List<JudgeConfig> judgeConfig = questionUpdateRequest.getJudgeConfig();
-        if (judgeCase != null) {
-            question.setJudgeCase(GSON.toJson(judgeCase));
-        }
-        if (judgeConfig != null) {
-            question.setJudgeConfig(GSON.toJson(judgeConfig));
-        }
-        boolean result = questionService.updateById(question);
+        User loginUser = userService.getLoginUser(request);
+        Boolean result = questionService.saveQuestion(questionSaveRequest, loginUser, false);
         return ResultUtils.success(result);
     }
 
@@ -144,8 +116,30 @@ public class QuestionController {
      * @param id
      * @return
      */
+    @GetMapping("/get")
+    public BaseResponse<Question> getQuestionById(long id, HttpServletRequest request) {
+        if (id <= 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        Question question = questionService.getById(id);
+        if (question == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
+        }
+        User loginUser = userService.getLoginUser(request);
+        if (!question.getUserId().equals(loginUser.getId()) && !userService.isAdmin(loginUser)) {
+            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
+        }
+        return ResultUtils.success(question);
+    }
+
+    /**
+     * 根据 id 获取
+     *
+     * @param id
+     * @return
+     */
     @GetMapping("/get/vo")
-    public BaseResponse<QuestionVO> getQuestionVOById(long id, HttpServletRequest request) {
+    public BaseResponse<DoQuestionVO> getQuestionVOById(long id, HttpServletRequest request) {
         if (id <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
@@ -202,47 +196,6 @@ public class QuestionController {
     // endregion
 
     /**
-     * 编辑（用户）
-     *
-     * @param questionEditRequest
-     * @param request
-     * @return
-     */
-    @PostMapping("/edit")
-    public BaseResponse<Boolean> editQuestion(@RequestBody QuestionEditRequest questionEditRequest, HttpServletRequest request) {
-        if (questionEditRequest == null || questionEditRequest.getId() <= 0) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
-        }
-        Question question = new Question();
-        BeanUtils.copyProperties(questionEditRequest, question);
-        List<String> tags = questionEditRequest.getTags();
-        if (tags != null) {
-            question.setTags(GSON.toJson(tags));
-        }
-        // 参数校验
-        questionService.validQuestion(question, false);
-        User loginUser = userService.getLoginUser(request);
-        long id = questionEditRequest.getId();
-        // 判断是否存在
-        Question oldQuestion = questionService.getById(id);
-        ThrowUtils.throwIf(oldQuestion == null, ErrorCode.NOT_FOUND_ERROR);
-        // 仅本人或管理员可编辑
-        if (!oldQuestion.getUserId().equals(loginUser.getId()) && !userService.isAdmin(loginUser)) {
-            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
-        }
-        List<JudgeCase> judgeCase = questionEditRequest.getJudgeCase();
-        List<JudgeConfig> judgeConfig = questionEditRequest.getJudgeConfig();
-        if (judgeCase != null) {
-            question.setJudgeCase(GSON.toJson(judgeCase));
-        }
-        if (judgeConfig != null) {
-            question.setJudgeCase(GSON.toJson(judgeConfig));
-        }
-        boolean result = questionService.updateById(question);
-        return ResultUtils.success(result);
-    }
-
-    /**
      * 分页获取题目提交列表（仅管理员和本人能看到答案和提交代码）
      *
      * @param questionQueryRequest
@@ -257,5 +210,15 @@ public class QuestionController {
         Page<Question> questionPage = questionService.page(new Page<>(current, size),
                 questionService.getQueryWrapper(questionQueryRequest));
         return ResultUtils.success(questionPage);
+    }
+
+    /**
+     * 获取题目标签
+     *
+     * @return
+     */
+    @GetMapping("/get/tags")
+    public BaseResponse<List<String>> getQuestionTags() {
+        return ResultUtils.success(QuestionTagEnum.getTags());
     }
 }

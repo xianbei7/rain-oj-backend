@@ -39,7 +39,7 @@ public class QuestionSubmit implements Serializable {
     /**
      * 编程语言
      */
-    private Integer language;
+    private String language;
 
     /**
      * 用户代码

@@ -26,6 +26,11 @@ public class QuestionQueryRequest extends PageRequest implements Serializable {
     private Long id;
 
     /**
+     * 编号
+     */
+    private Integer number;
+
+    /**
      * 标题
      */
     private String title;
@@ -34,6 +39,16 @@ public class QuestionQueryRequest extends PageRequest implements Serializable {
      * 内容
      */
     private String content;
+
+    /**
+     * 搜索
+     */
+    private String searchText;
+
+    /**
+     * 难度
+     */
+    private String difficulty;
 
     /**
      * 标签列表

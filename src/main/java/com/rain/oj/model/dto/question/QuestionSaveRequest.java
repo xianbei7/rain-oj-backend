@@ -1,20 +1,15 @@
 package com.rain.oj.model.dto.question;
 
 import java.io.Serializable;
-import java.util.Date;
 import java.util.List;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableLogic;
 import lombok.Data;
 
 /**
  * 更新请求
  */
 @Data
-public class QuestionUpdateRequest implements Serializable {
+public class QuestionSaveRequest implements Serializable {
 
     /**
      * id
@@ -27,9 +22,19 @@ public class QuestionUpdateRequest implements Serializable {
     private String title;
 
     /**
+     * 编号
+     */
+    private Integer number;
+
+    /**
      * 内容
      */
     private String content;
+
+    /**
+     * 难度
+     */
+    private String difficulty;
 
     /**
      * 标签列表
@@ -49,7 +54,7 @@ public class QuestionUpdateRequest implements Serializable {
     /**
      * 判题配置
      */
-    private List<JudgeConfig> judgeConfig;
+    private JudgeConfig judgeConfig;
 
     private static final long serialVersionUID = 1L;
 }

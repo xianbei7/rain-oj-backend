@@ -37,18 +37,6 @@ public class User implements Serializable {
     private String userPassword;
 
     /**
-     * 开放平台id
-     */
-    @TableField(value = "union_id")
-    private String unionId;
-
-    /**
-     * 公众号openId
-     */
-    @TableField(value = "mp_open_id")
-    private String mpOpenId;
-
-    /**
      * 用户昵称
      */
     @TableField(value = "user_name")

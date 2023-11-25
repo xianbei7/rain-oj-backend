@@ -11,18 +11,17 @@ import java.util.stream.Collectors;
  */
 public enum QuestionSubmitLanguageEnum {
 
-    JAVA("Java", 1),
-    CPLUSPLUS("C++", 2),
-    GOLANG("Golang", 3),
-    C("C", 4);
+    C("c"),
+    CPLUSPLUS("cpp"),
+    JAVA("java"),
+    GOLANG("go"),
+    JAVASCRIPT("javascript");
 
     private final String text;
 
-    private final Integer value;
 
-    QuestionSubmitLanguageEnum(String text, Integer value) {
+    QuestionSubmitLanguageEnum(String text) {
         this.text = text;
-        this.value = value;
     }
 
     /**
@@ -30,10 +29,9 @@ public enum QuestionSubmitLanguageEnum {
      *
      * @return
      */
-    public static List<Integer> getValues() {
-        return Arrays.stream(values()).map(item -> item.value).collect(Collectors.toList());
+    public static List<String> getLanguages() {
+        return Arrays.stream(values()).map(item -> item.text).collect(Collectors.toList());
     }
-
     /**
      * 根据 text 获取枚举
      *
@@ -51,11 +49,6 @@ public enum QuestionSubmitLanguageEnum {
         }
         return null;
     }
-
-    public Integer getValue() {
-        return value;
-    }
-
     public String getText() {
         return text;
     }

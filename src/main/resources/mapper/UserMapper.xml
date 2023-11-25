@@ -5,8 +5,6 @@
 <mapper namespace="com.rain.oj.mapper.UserMapper">
     <resultMap id="BaseResultMap" type="com.rain.oj.model.entity.User">
         <id property="id" column="id" jdbcType="BIGINT"/>
-        <result property="unionId" column="union_id" jdbcType="VARCHAR"/>
-        <result property="mpOpenId" column="mp_open_id" jdbcType="VARCHAR"/>
         <result property="userName" column="user_name" jdbcType="VARCHAR"/>
         <result property="userAvatar" column="user_avatar" jdbcType="VARCHAR"/>
         <result property="userProfile" column="user_profile" jdbcType="VARCHAR"/>
@@ -15,10 +13,4 @@
         <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
         <result property="isDelete" column="is_delete" jdbcType="TINYINT"/>
     </resultMap>
-
-    <sql id="Base_Column_List">
-        id,unionId,mpOpenId,
-        userName,userAvatar,userProfile,
-        userRole,createTime,updateTime,isDelete
-    </sql>
 </mapper>

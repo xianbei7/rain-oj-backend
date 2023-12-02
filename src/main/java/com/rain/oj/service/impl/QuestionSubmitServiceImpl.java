@@ -6,13 +6,14 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.rain.oj.common.ErrorCode;
 import com.rain.oj.constant.CommonConstant;
 import com.rain.oj.exception.BusinessException;
+import com.rain.oj.judge.JudgeService;
 import com.rain.oj.mapper.QuestionSubmitMapper;
 import com.rain.oj.model.dto.questionsubmit.QuestionSubmitAddRequest;
 import com.rain.oj.model.dto.questionsubmit.QuestionSubmitQueryRequest;
 import com.rain.oj.model.entity.Question;
 import com.rain.oj.model.entity.QuestionSubmit;
 import com.rain.oj.model.entity.User;
-import com.rain.oj.model.enums.QuestionSubmitLanguageEnum;
+import com.rain.oj.model.enums.ProgrammingLanguageEnum;
 import com.rain.oj.model.enums.QuestionSubmitStatusEnum;
 import com.rain.oj.model.vo.QuestionSubmitVO;
 import com.rain.oj.model.vo.UserVO;
@@ -22,15 +23,17 @@ import com.rain.oj.service.UserService;
 import com.rain.oj.utils.SqlUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 /**
- * 题目提交service实现类
+ * 题目提交服务实现类
  */
 @Service
 public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper, QuestionSubmit>
@@ -40,6 +43,10 @@ public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper,
 
     @Resource
     private UserService userService;
+
+    @Resource
+    @Lazy
+    private JudgeService judgeService;
 
     /**
      * 提交题目
@@ -52,7 +59,7 @@ public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper,
     public Long doQuestionSubmit(QuestionSubmitAddRequest questionSubmitAddRequest, User loginUser) {
         // 校验编程语言是否合法
         String language = questionSubmitAddRequest.getLanguage();
-        QuestionSubmitLanguageEnum languageEnum = QuestionSubmitLanguageEnum.getEnumByText(language);
+        ProgrammingLanguageEnum languageEnum = ProgrammingLanguageEnum.getEnumByText(language);
         if (languageEnum == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "编程语言错误");
         }
@@ -73,14 +80,17 @@ public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper,
         questionSubmit.setLanguage(languageEnum.getText());
         // 设置初始状态
         questionSubmit.setStatus(QuestionSubmitStatusEnum.WAITING.getValue());
-        questionSubmit.setJudgeInfo("{}");
+        questionSubmit.setJudgeInfo("[]");
         boolean save = save(questionSubmit);
         if (!save) {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "数据插入失败");
         }
-        // todo 执行判题服务
-
-        return questionSubmit.getId();
+        Long questionSubmitId = questionSubmit.getId();
+        // todo 执行判题服务，异步方式,消息队列、线程池
+        CompletableFuture.runAsync(() -> {
+            judgeService.doJudge(questionSubmitId);
+        });
+        return questionSubmitId;
     }
 
     @Override

@@ -1,7 +1,7 @@
 package com.rain.oj.model.vo;
 
 import cn.hutool.json.JSONUtil;
-import com.rain.oj.model.dto.questionsubmit.JudgeInfo;
+import com.rain.oj.judge.codesandbox.model.JudgeResult;
 import com.rain.oj.model.entity.QuestionSubmit;
 import lombok.Data;
 import org.springframework.beans.BeanUtils;
@@ -42,7 +42,7 @@ public class QuestionSubmitVO implements Serializable {
     /**
      * 判题信息（json 数组）
      */
-    private JudgeInfo judgeInfo;
+    private JudgeResult judgeResult;
 
     /**
      * 判题状态（0 - 待判题、1 - 判题中、2  成功、3 - 失败）
@@ -73,9 +73,9 @@ public class QuestionSubmitVO implements Serializable {
         }
         QuestionSubmit questionSubmit = new QuestionSubmit();
         BeanUtils.copyProperties(questionSubmitVO, questionSubmit);
-        JudgeInfo judgeInfoObj = questionSubmitVO.getJudgeInfo();
-        if (judgeInfoObj != null) {
-            questionSubmit.setJudgeInfo(JSONUtil.toJsonStr(judgeInfoObj));
+        JudgeResult judgeResult = questionSubmitVO.getJudgeResult();
+        if (judgeResult != null) {
+            questionSubmit.setJudgeInfo(JSONUtil.toJsonStr(judgeResult));
         }
         return questionSubmit;
     }
@@ -92,8 +92,8 @@ public class QuestionSubmitVO implements Serializable {
         }
         QuestionSubmitVO questionSubmitVO = new QuestionSubmitVO();
         BeanUtils.copyProperties(questionSubmit, questionSubmitVO);
-        String judgeInfoStr = questionSubmit.getJudgeInfo();
-        questionSubmitVO.setJudgeInfo(JSONUtil.toBean(judgeInfoStr, JudgeInfo.class));
+        String judgeResult = questionSubmit.getJudgeResult();
+        questionSubmitVO.setJudgeResult(JSONUtil.toBean(judgeResult, JudgeResult.class));
         return questionSubmitVO;
     }
 

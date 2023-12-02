@@ -1,32 +1,43 @@
 package com.rain.oj.judge.codesandbox.model;
 
-import com.rain.oj.model.dto.questionsubmit.JudgeInfo;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
+
+/**
+ * 执行代码响应
+ */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class ExecuteCodeResponse {
-    /**
-     * 输出用例
-     */
-    private List<String> outputList;
-    /**
-     * 接口信息
-     */
-    private String message;
+
     /**
      * 执行状态
      */
     private Integer status;
 
     /**
-     * 用例输入
+     * 错误类型
      */
-    private JudgeInfo judgeInfo;
+    private String errorType;
+
+    /**
+     * 错误信息
+     */
+    private String errorMessage;
+
+    /**
+     * 判题信息
+     */
+    private List<JudgeInfo> judgeInfoList;
+
+    /**
+     * 输出用例
+     */
+    private List<String> outputList;
 }

@@ -15,7 +15,7 @@ import com.rain.oj.model.vo.QuestionVO;
 import javax.servlet.http.HttpServletRequest;
 
 /**
- * 题目提交service
+ * 题目提交服务
  */
 public interface QuestionSubmitService extends IService<QuestionSubmit> {
     /**

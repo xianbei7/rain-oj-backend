@@ -7,9 +7,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * 题目提交编程语言枚举
+ * 编程语言枚举
  */
-public enum QuestionSubmitLanguageEnum {
+public enum ProgrammingLanguageEnum {
 
     C("c"),
     CPLUSPLUS("cpp"),
@@ -20,7 +20,7 @@ public enum QuestionSubmitLanguageEnum {
     private final String text;
 
 
-    QuestionSubmitLanguageEnum(String text) {
+    ProgrammingLanguageEnum(String text) {
         this.text = text;
     }
 
@@ -38,11 +38,11 @@ public enum QuestionSubmitLanguageEnum {
      * @param text
      * @return
      */
-    public static QuestionSubmitLanguageEnum getEnumByText(String text) {
+    public static ProgrammingLanguageEnum getEnumByText(String text) {
         if (ObjectUtils.isEmpty(text)) {
             return null;
         }
-        for (QuestionSubmitLanguageEnum anEnum : QuestionSubmitLanguageEnum.values()) {
+        for (ProgrammingLanguageEnum anEnum : ProgrammingLanguageEnum.values()) {
             if (anEnum.text.equals(text)) {
                 return anEnum;
             }

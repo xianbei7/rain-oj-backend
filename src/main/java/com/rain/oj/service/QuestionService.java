@@ -13,7 +13,7 @@ import com.rain.oj.model.vo.QuestionVO;
 import javax.servlet.http.HttpServletRequest;
 
 /**
- * 题目service
+ * 题目服务
  */
 public interface QuestionService extends IService<Question> {
     /**
@@ -51,4 +51,5 @@ public interface QuestionService extends IService<Question> {
     Page<QuestionVO> getQuestionVOPage(Page<Question> questionPage, HttpServletRequest request);
 
     Boolean saveQuestion(QuestionSaveRequest questionSaveRequest, User loginUser,boolean add);
+
 }

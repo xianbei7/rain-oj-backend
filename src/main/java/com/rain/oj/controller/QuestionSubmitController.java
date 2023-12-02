@@ -9,8 +9,7 @@ import com.rain.oj.model.dto.questionsubmit.QuestionSubmitAddRequest;
 import com.rain.oj.model.dto.questionsubmit.QuestionSubmitQueryRequest;
 import com.rain.oj.model.entity.QuestionSubmit;
 import com.rain.oj.model.entity.User;
-import com.rain.oj.model.enums.QuestionSubmitLanguageEnum;
-import com.rain.oj.model.enums.QuestionTagEnum;
+import com.rain.oj.model.enums.ProgrammingLanguageEnum;
 import com.rain.oj.model.vo.QuestionSubmitVO;
 import com.rain.oj.service.QuestionSubmitService;
 import com.rain.oj.service.UserService;
@@ -80,6 +79,6 @@ public class QuestionSubmitController {
      */
     @GetMapping("/get/languages")
     public BaseResponse<List<String>> getQuestionSubmitLanguages() {
-        return ResultUtils.success(QuestionSubmitLanguageEnum.getLanguages());
+        return ResultUtils.success(ProgrammingLanguageEnum.getLanguages());
     }
 }

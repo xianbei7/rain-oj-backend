@@ -1,4 +1,4 @@
-package com.rain.oj.model.dto.questionsubmit;
+package com.rain.oj.judge.codesandbox.model;
 
 import lombok.Data;
 
@@ -15,9 +15,9 @@ public class JudgeInfo {
     /**
      * 消耗时间
      */
-    private Integer time;
+    private Long time;
     /**
      * 消耗内存
      */
-    private Integer memory;
+    private Long memory;
 }

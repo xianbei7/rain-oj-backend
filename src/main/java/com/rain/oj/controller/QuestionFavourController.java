@@ -6,16 +6,20 @@ import com.rain.oj.common.ErrorCode;
 import com.rain.oj.common.ResultUtils;
 import com.rain.oj.exception.BusinessException;
 import com.rain.oj.exception.ThrowUtils;
+import com.rain.oj.model.bo.QuestionFavourBO;
 import com.rain.oj.model.dto.question.QuestionQueryRequest;
 import com.rain.oj.model.dto.questionfavour.QuestionFavourQueryRequest;
 import com.rain.oj.model.entity.Question;
 import com.rain.oj.model.entity.User;
+import com.rain.oj.model.vo.QuestionFavourVO;
 import com.rain.oj.model.vo.QuestionVO;
 import com.rain.oj.service.QuestionFavourService;
 import com.rain.oj.service.QuestionService;
 import com.rain.oj.service.UserService;
+
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
@@ -44,7 +48,7 @@ public class QuestionFavourController {
      * @return resultNum 收藏变化数
      */
     @GetMapping("/")
-    public BaseResponse<Integer> doQuestionFavour(Long questionId,HttpServletRequest request) {
+    public BaseResponse<Integer> doQuestionFavour(Long questionId, HttpServletRequest request) {
         if (questionId == null || questionId <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
@@ -62,7 +66,7 @@ public class QuestionFavourController {
      */
     @PostMapping("/my/list/page")
     public BaseResponse<Page<QuestionVO>> listMyFavourQuestionByPage(@RequestBody QuestionQueryRequest questionQueryRequest,
-            HttpServletRequest request) {
+                                                                     HttpServletRequest request) {
         if (questionQueryRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
@@ -71,9 +75,9 @@ public class QuestionFavourController {
         long size = questionQueryRequest.getPageSize();
         // 限制爬虫
         ThrowUtils.throwIf(size > 20, ErrorCode.PARAMS_ERROR);
-        Page<Question> questionPage = questionFavourService.listFavourQuestionByPage(new Page<>(current, size),
-                questionService.getQueryWrapper(questionQueryRequest), loginUser.getId());
-        return ResultUtils.success(questionService.getQuestionVOPage(questionPage, request));
+        /*Page<Question> questionPage = questionFavourService.listFavourQuestionByPage((current - 1) * size, size, loginUser.getId());
+        return ResultUtils.success(questionService.getQuestionVOPage(questionPage, request));*/
+        return ResultUtils.success(null);
     }
 
     /**
@@ -83,8 +87,8 @@ public class QuestionFavourController {
      * @param request
      */
     @PostMapping("/list/page")
-    public BaseResponse<Page<QuestionVO>> listFavourQuestionByPage(@RequestBody QuestionFavourQueryRequest questionFavourQueryRequest,
-            HttpServletRequest request) {
+    public BaseResponse<Page<QuestionFavourVO>> listFavourQuestionByPage(@RequestBody QuestionFavourQueryRequest questionFavourQueryRequest,
+                                                                         HttpServletRequest request) {
         if (questionFavourQueryRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
@@ -92,9 +96,8 @@ public class QuestionFavourController {
         long size = questionFavourQueryRequest.getPageSize();
         Long userId = questionFavourQueryRequest.getUserId();
         // 限制爬虫
-        ThrowUtils.throwIf(size > 20 || userId == null, ErrorCode.PARAMS_ERROR);
-        Page<Question> questionPage = questionFavourService.listFavourQuestionByPage(new Page<>(current, size),
-                questionService.getQueryWrapper(questionFavourQueryRequest.getQuestionQueryRequest()), userId);
-        return ResultUtils.success(questionService.getQuestionVOPage(questionPage, request));
+        ThrowUtils.throwIf(size > 50 || userId == null, ErrorCode.PARAMS_ERROR);
+        Page<QuestionFavourBO> questionPage = questionFavourService.listFavourQuestionByPage(new Page<>(current, size), userId);
+        return ResultUtils.success(questionFavourService.getFavourQuestionVOPage(questionPage, request));
     }
 }

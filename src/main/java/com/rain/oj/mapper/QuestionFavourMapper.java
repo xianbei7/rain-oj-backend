@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Constants;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.rain.oj.model.bo.QuestionFavourBO;
 import com.rain.oj.model.entity.Question;
 import com.rain.oj.model.entity.QuestionFavour;
 import org.apache.ibatis.annotations.Param;
@@ -15,15 +16,24 @@ import org.apache.ibatis.annotations.Param;
 public interface QuestionFavourMapper extends BaseMapper<QuestionFavour> {
 
     /**
-     * 分页查询收藏题目列表
+     * 分页查询用户收藏题目列表
+     *
+     * @param page
+     * @param favourUserId
+     * @return
+     */
+    Page<QuestionFavourBO> listFavourQuestionByPage(IPage<QuestionFavourBO> page,long favourUserId);
+
+    /**
+     * 分页查询用户自己的收藏题目列表
      *
      * @param page
      * @param queryWrapper
      * @param favourUserId
      * @return
      */
-    Page<Question> listFavourQuestionByPage(IPage<Question> page, @Param(Constants.WRAPPER) Wrapper<Question> queryWrapper,
-                                            long favourUserId);
+    Page<Question> listMyFavourQuestionByPage(IPage<Question> page, @Param(Constants.WRAPPER) Wrapper<Question> queryWrapper,
+                                              long favourUserId);
 
 }
 

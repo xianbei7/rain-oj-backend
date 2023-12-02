@@ -32,6 +32,7 @@ create table if not exists question
     title        varchar(512)                       null comment '标题',
     content      text                               null comment '内容',
     tags         varchar(1024)                      null comment '标签列表（json 数组）',
+    type         tinyint                            not null comment '类型',
     difficulty   tinyint                            not null comment '难度',
     answer       text                               null comment '题目答案',
     submit_num   int      default 0                 not null comment '题目提交数',
@@ -50,15 +51,16 @@ create table if not exists question
 -- 题目提交表（硬删除）
 create table if not exists question_submit
 (
-    id          bigint auto_increment comment 'id' primary key,
-    question_id bigint                             not null comment '题目 id',
-    user_id     bigint                             not null comment '提交用户 id',
-    language    varchar(10)                        not null comment '编程语言',
-    code        text                               not null comment '用户代码',
-    judge_info  text                               null comment '判题信息（json 数组）',
-    status      int      default 0                 not null comment '判题状态（0 - 待判题、1 - 判题中、2  成功、3 - 失败）',
-    create_time datetime default CURRENT_TIMESTAMP not null comment '创建时间',
-    update_time datetime default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间',
+    id           bigint auto_increment comment 'id' primary key,
+    question_id  bigint                             not null comment '题目 id',
+    user_id      bigint                             not null comment '提交用户 id',
+    language     varchar(10)                        not null comment '编程语言',
+    code         text                               not null comment '用户代码',
+    judge_info   text                               null comment '判题信息（json 数组）',
+    judge_result text                               null comment '判题结果（json对象）',
+    status       int      default 0                 not null comment '判题状态（0 - 待判题、1 - 判题中、2  成功、3 - 失败）',
+    create_time  datetime default CURRENT_TIMESTAMP not null comment '创建时间',
+    update_time  datetime default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间',
     index idx_question_id (question_id),
     index idx_user_id (user_id)
 ) comment '题目提交';
@@ -86,3 +88,13 @@ create table if not exists question_favour
     index idx_question_id (question_id),
     index idx_user_id (user_id)
 ) comment '题目收藏';
+-- 题目模板表
+create table if not exists question_template
+(
+    question_id   bigint comment '题目 id',
+    language      varchar(10) comment '编程语言',
+    code_template text                               not null comment '代码模板',
+    create_time   datetime default CURRENT_TIMESTAMP not null comment '创建时间',
+    update_time   datetime default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间',
+    primary key (question_id, language)
+) comment '题目代码模板';

@@ -37,6 +37,11 @@ public class QuestionSaveRequest implements Serializable {
     private String difficulty;
 
     /**
+     * 类型
+     */
+    private String type;
+
+    /**
      * 标签列表
      */
     private List<String> tags;

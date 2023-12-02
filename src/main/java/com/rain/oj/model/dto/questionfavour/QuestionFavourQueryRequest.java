@@ -14,11 +14,6 @@ import lombok.EqualsAndHashCode;
 public class QuestionFavourQueryRequest extends PageRequest implements Serializable {
 
     /**
-     * 题目查询请求
-     */
-    private QuestionQueryRequest questionQueryRequest;
-
-    /**
      * 用户 id
      */
     private Long userId;

@@ -11,14 +11,9 @@
             <result property="language" column="language" jdbcType="VARCHAR"/>
             <result property="code" column="code" jdbcType="VARCHAR"/>
             <result property="judgeInfo" column="judge_info" jdbcType="VARCHAR"/>
+            <result property="judgeResult" column="judge_result" jdbcType="VARCHAR"/>
             <result property="status" column="status" jdbcType="INTEGER"/>
             <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
             <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
     </resultMap>
-
-    <sql id="Base_Column_List">
-        id,question_id,user_id,
-        language,code,judge_info,
-        status,create_time,update_time
-    </sql>
 </mapper>

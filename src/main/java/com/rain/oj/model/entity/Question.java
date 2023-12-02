@@ -47,6 +47,11 @@ public class Question implements Serializable {
     private Integer difficulty;
 
     /**
+     * 类型
+     */
+    private Integer type;
+
+    /**
      * 题目答案
      */
     private String answer;
